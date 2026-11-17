@@ -19,15 +19,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Godot
-        uses: firebelley/godot-export@v6.0.0
-        with:
-          godot_executable_download_url: https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
-          godot_export_templates_download_url: https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz
-          relative_project_path: .
+      - name: Install Godot
+        run: |
+          wget -q https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          unzip -q Godot_v4.7.2-stable_linux.x86_64.zip
+          chmod +x Godot_v4.7.2-stable_linux.x86_64
+          echo "$PWD" >> $GITHUB_PATH
+          
+          wget -q https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz
+          mkdir -p ~/.local/share/godot/export_templates/4.7.2.stable
+          unzip -q Godot_v4.7.2-stable_export_templates.tpz -d ~/.local/share/godot/export_templates/4.7.2.stable
 
       - name: Validate project
-        run: godot --headless --check-only --quit
+        run: |
+          Godot_v4.7.2-stable_linux.x86_64 --headless --check-only --quit
 
   build-ios:
     name: Build iOS Device (Unsigned)
@@ -38,22 +43,25 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Godot
-        uses: firebelley/godot-export@v6.0.0
-        with:
-          godot_executable_download_url: https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_macos.universal.zip
-          godot_export_templates_download_url: https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz
-          relative_project_path: .
+      - name: Install Godot
+        run: |
+          wget -q https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_macos.universal.zip
+          unzip -q Godot_v4.7.2-stable_macos.universal.zip
+          chmod +x Godot_v4.7.2-stable_macos.universal
+          echo "$PWD" >> $GITHUB_PATH
+          
+          wget -q https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz
+          mkdir -p ~/Library/Application\ Support/Godot/export_templates/4.7.2.stable
+          unzip -q Godot_v4.7.2-stable_export_templates.tpz -d ~/Library/Application\ Support/Godot/export_templates/4.7.2.stable
 
       - name: Export iOS Xcode project
         run: |
-          godot --headless --export-release "iOS" build/ios
+          Godot_v4.7.2-stable_macos.universal --headless --export-release "iOS" build/ios
           echo "Export completed"
 
       - name: Find Xcode project
         id: xcode_project
         run: |
-          # Godot exports iOS project as <project_name>.xcodeproj
           PROJECT_PATH=$(find build/ios -name "*.xcodeproj" -type d | head -1)
           if [ -z "$PROJECT_PATH" ]; then
             echo "ERROR: No Xcode project found in build/ios"
@@ -85,7 +93,6 @@ jobs:
         run: |
           cd "${{ steps.xcode_project.outputs.project_dir }}"
           
-          # Find the built .app bundle
           APP_PATH=$(find ./DerivedData -name "Mini Jump.app" -type d | head -1)
           if [ -z "$APP_PATH" ]; then
             echo "ERROR: No .app bundle found"
@@ -94,20 +101,16 @@ jobs:
           fi
           echo "Found .app: $APP_PATH"
           
-          # Create proper IPA structure
           mkdir -p Payload
           cp -r "$APP_PATH" Payload/
           
-          # Verify IPA structure
           if [ ! -d "Payload/Mini Jump.app" ]; then
             echo "ERROR: IPA structure invalid"
             exit 1
           fi
           
-          # Create IPA
           zip -r MiniJump.ipa Payload
           
-          # Verify IPA
           unzip -l MiniJump.ipa | head -20
           
           echo "ipa_path=${PWD}/MiniJump.ipa" >> $GITHUB_OUTPUT
@@ -128,16 +131,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Godot
-        uses: firebelley/godot-export@v6.0.0
-        with:
-          godot_executable_download_url: https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_macos.universal.zip
-          godot_export_templates_download_url: https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz
-          relative_project_path: .
+      - name: Install Godot
+        run: |
+          wget -q https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_macos.universal.zip
+          unzip -q Godot_v4.7.2-stable_macos.universal.zip
+          chmod +x Godot_v4.7.2-stable_macos.universal
+          echo "$PWD" >> $GITHUB_PATH
+          
+          wget -q https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz
+          mkdir -p ~/Library/Application\ Support/Godot/export_templates/4.7.2.stable
+          unzip -q Godot_v4.7.2-stable_export_templates.tpz -d ~/Library/Application\ Support/Godot/export_templates/4.7.2.stable
 
       - name: Export iOS Xcode project
         run: |
-          godot --headless --export-release "iOS" build/ios-sim
+          Godot_v4.7.2-stable_macos.universal --headless --export-release "iOS" build/ios-sim
           echo "Export completed"
 
       - name: Find Xcode project
