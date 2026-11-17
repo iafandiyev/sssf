@@ -1,0 +1,127 @@
+[gd_resource type="Theme" load_steps=1 format=3 uid="//uid/theme1"]
+
+[resource]
+default_font = SubResource("1_font")
+default_font_size = 18
+
+[font]
+default_font = SubResource("1_font")
+
+[font "1_font"]
+type = "DynamicFont"
+data = SubResource("1_font_data")
+
+[font "1_font_data"]
+type = "DynamicFontData"
+font_data = ExtResource("1_font_file")
+
+[ext_resource type="File" path="res://theme/fonts/Inter-Regular.ttf" id="1_font_file"]
+
+[style "Label:Title"]
+type = "StyleBoxEmpty"
+font_color = Color(0.98, 0.95, 0.9, 1)
+font_outline_color = Color(0.1, 0.1, 0.12, 1)
+font_outline_size = 2
+
+[style "Label:Subtitle"]
+type = "StyleBoxEmpty"
+font_color = Color(0.7, 0.65, 0.6, 1)
+
+[style "Label:Hint"]
+type = "StyleBoxEmpty"
+font_color = Color(0.5, 0.45, 0.4, 1)
+
+[style "Label:HUD"]
+type = "StyleBoxEmpty"
+font_color = Color(1, 1, 1, 0.9)
+font_outline_color = Color(0.1, 0.1, 0.12, 1)
+font_outline_size = 3
+
+[style "Label:NewBest"]
+type = "StyleBoxEmpty"
+font_color = Color(1, 0.85, 0.2, 1)
+font_outline_color = Color(0.8, 0.5, 0.1, 1)
+font_outline_size = 2
+
+[style "Button:Primary"]
+type = "StyleBoxFlat"
+bg_color = Color(0.2, 0.6, 0.9, 1)
+border_color = Color(0.15, 0.5, 0.8, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_left = 12
+corner_radius_bottom_right = 12
+content_margin_left = 24
+content_margin_top = 12
+content_margin_right = 24
+content_margin_bottom = 12
+font_color = Color(1, 1, 1, 1)
+font_outline_color = Color(0.1, 0.3, 0.5, 1)
+font_outline_size = 1
+
+[style "Button:Primary:hover"]
+type = "StyleBoxFlat"
+bg_color = Color(0.25, 0.7, 1, 1)
+border_color = Color(0.2, 0.6, 0.9, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_left = 12
+corner_radius_bottom_right = 12
+content_margin_left = 24
+content_margin_top = 12
+content_margin_right = 24
+content_margin_bottom = 12
+font_color = Color(1, 1, 1, 1)
+font_outline_color = Color(0.1, 0.3, 0.5, 1)
+font_outline_size = 1
+
+[style "Button:Primary:pressed"]
+type = "StyleBoxFlat"
+bg_color = Color(0.15, 0.5, 0.8, 1)
+border_color = Color(0.1, 0.4, 0.7, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_left = 12
+corner_radius_bottom_right = 12
+content_margin_left = 24
+content_margin_top = 12
+content_margin_right = 24
+content_margin_bottom = 12
+font_color = Color(1, 1, 1, 1)
+font_outline_color = Color(0.1, 0.3, 0.5, 1)
+font_outline_size = 1
+
+[style "Button:Primary:focus"]
+type = "StyleBoxFlat"
+bg_color = Color(0.2, 0.6, 0.9, 1)
+border_color = Color(0.4, 0.8, 1, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_left = 12
+corner_radius_bottom_right = 12
+content_margin_left = 24
+content_margin_top = 12
+content_margin_right = 24
+content_margin_bottom = 12
+font_color = Color(1, 1, 1, 1)
+font_outline_color = Color(0.1, 0.3, 0.5, 1)
+font_outline_size = 1
+
+[style "Control:Transparent"]
+type = "StyleBoxEmpty"

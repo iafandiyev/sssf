@@ -1,0 +1,30 @@
+[gd_scene load_steps=5 format=3 uid="//uid/d6g7h8j9k0"]
+
+[ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
+[ext_resource type="Script" path="res://scripts/player.gd" id="2_player"]
+[ext_resource type="Script" path="res://scripts/obstacle_spawner.gd" id="3_spawner"]
+[ext_resource type="Script" path="res://scripts/background.gd" id="5_bg"]
+
+[sub_resource type="PackedScene" id="PackedScene_obstacle"]
+@0@ = ExtResource("3_spawner")
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_main")
+
+[node name="Background" type="Node2D" parent="."]
+script = ExtResource("5_bg")
+
+[node name="Layer1" type="Node2D" parent="Background"]
+
+[node name="Layer2" type="Node2D" parent="Background"]
+
+[node name="Layer3" type="Node2D" parent="Background"]
+
+[node name="Ground" type="Node2D" parent="Background"]
+
+[node name="Player" type="CharacterBody2D" parent="."]
+script = ExtResource("2_player")
+position = Vector2(100, 700)
+
+[node name="ObstacleSpawner" type="Node" parent="."]
+script = ExtResource("3_spawner")
