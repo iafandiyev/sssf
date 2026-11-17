@@ -1,0 +1,13 @@
+# Godot 4 specific
+.godot/
+*.import
+*.uid
+
+# Build outputs
+build/
+*.ipa
+*.app
+
+# OS files
+.DS_Store
+Thumbs.db
