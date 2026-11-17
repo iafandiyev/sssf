@@ -11,75 +11,23 @@ permissions:
   contents: read
 
 jobs:
-  validate:
-    name: Validate Project
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Godot
-        run: |
-          wget -q https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
-          unzip -q Godot_v4.7.2-stable_linux.x86_64.zip
-          chmod +x Godot_v4.7.2-stable_linux.x86_64
-          echo "$PWD" >> $GITHUB_PATH
-          
-          wget -q https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz
-          mkdir -p ~/.local/share/godot/export_templates/4.7.2.stable
-          unzip -q Godot_v4.7.2-stable_export_templates.tpz -d ~/.local/share/godot/export_templates/4.7.2.stable
-
-      - name: Validate project
-        run: |
-          Godot_v4.7.2-stable_linux.x86_64 --headless --check-only --quit
-
   build-ios:
     name: Build iOS Device (Unsigned)
-    needs: validate
     runs-on: macos-latest
     timeout-minutes: 60
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Godot
+      - name: Select Xcode
         run: |
-          wget -q https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_macos.universal.zip
-          unzip -q Godot_v4.7.2-stable_macos.universal.zip
-          # On macOS, the binary is inside Godot.app
-          chmod +x Godot.app/Contents/MacOS/Godot
-          echo "$PWD/Godot.app/Contents/MacOS" >> $GITHUB_PATH
-          
-          wget -q https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz
-          mkdir -p ~/Library/Application\ Support/Godot/export_templates/4.7.2.stable
-          unzip -q Godot_v4.7.2-stable_export_templates.tpz -d ~/Library/Application\ Support/Godot/export_templates/4.7.2.stable
+          sudo xcode-select -s /Applications/Xcode_15.4.app 2>/dev/null || sudo xcode-select -s /Applications/Xcode.app
+          xcodebuild -version
 
-      - name: Export iOS Xcode project
+      - name: Build Xcode project
         run: |
-          Godot --headless --export-release "iOS" build/ios
-          echo "Export completed"
-
-      - name: Find Xcode project
-        id: xcode_project
-        run: |
-          PROJECT_PATH=$(find build/ios -name "*.xcodeproj" -type d | head -1)
-          if [ -z "$PROJECT_PATH" ]; then
-            echo "ERROR: No Xcode project found in build/ios"
-            ls -la build/ios/
-            exit 1
-          fi
-          echo "Found Xcode project: $PROJECT_PATH"
-          echo "project_path=$PROJECT_PATH" >> $GITHUB_OUTPUT
-          
-          PROJECT_DIR=$(dirname "$PROJECT_PATH")
-          echo "project_dir=$PROJECT_DIR" >> $GITHUB_OUTPUT
-
-      - name: Build with Xcode (unsigned device build)
-        run: |
-          cd "${{ steps.xcode_project.outputs.project_dir }}"
-          xcodebuild -project "${{ steps.xcode_project.outputs.project_path }}" \
-            -scheme "Mini Jump" \
+          xcodebuild -project MiniJump.xcodeproj \
+            -scheme MiniJump \
             -configuration Release \
             -sdk iphoneos \
             -destination generic/platform=iOS \
@@ -92,9 +40,7 @@ jobs:
       - name: Find and package .app bundle
         id: package_ipa
         run: |
-          cd "${{ steps.xcode_project.outputs.project_dir }}"
-          
-          APP_PATH=$(find ./DerivedData -name "Mini Jump.app" -type d | head -1)
+          APP_PATH=$(find ./DerivedData -name "MiniJump.app" -type d | head -1)
           if [ -z "$APP_PATH" ]; then
             echo "ERROR: No .app bundle found"
             find ./DerivedData -name "*.app" -type d
@@ -105,7 +51,7 @@ jobs:
           mkdir -p Payload
           cp -r "$APP_PATH" Payload/
           
-          if [ ! -d "Payload/Mini Jump.app" ]; then
+          if [ ! -d "Payload/MiniJump.app" ]; then
             echo "ERROR: IPA structure invalid"
             exit 1
           fi
@@ -125,49 +71,21 @@ jobs:
 
   build-ios-simulator:
     name: Build iOS Simulator (Unsigned)
-    needs: validate
     runs-on: macos-latest
     timeout-minutes: 60
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Godot
+      - name: Select Xcode
         run: |
-          wget -q https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_macos.universal.zip
-          unzip -q Godot_v4.7.2-stable_macos.universal.zip
-          chmod +x Godot.app/Contents/MacOS/Godot
-          echo "$PWD/Godot.app/Contents/MacOS" >> $GITHUB_PATH
-          
-          wget -q https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz
-          mkdir -p ~/Library/Application\ Support/Godot/export_templates/4.7.2.stable
-          unzip -q Godot_v4.7.2-stable_export_templates.tpz -d ~/Library/Application\ Support/Godot/export_templates/4.7.2.stable
-
-      - name: Export iOS Xcode project
-        run: |
-          Godot --headless --export-release "iOS" build/ios-sim
-          echo "Export completed"
-
-      - name: Find Xcode project
-        id: xcode_project
-        run: |
-          PROJECT_PATH=$(find build/ios-sim -name "*.xcodeproj" -type d | head -1)
-          if [ -z "$PROJECT_PATH" ]; then
-            echo "ERROR: No Xcode project found in build/ios-sim"
-            ls -la build/ios-sim/
-            exit 1
-          fi
-          echo "Found Xcode project: $PROJECT_PATH"
-          echo "project_path=$PROJECT_PATH" >> $GITHUB_OUTPUT
-          
-          PROJECT_DIR=$(dirname "$PROJECT_PATH")
-          echo "project_dir=$PROJECT_DIR" >> $GITHUB_OUTPUT
+          sudo xcode-select -s /Applications/Xcode_15.4.app 2>/dev/null || sudo xcode-select -s /Applications/Xcode.app
+          xcodebuild -version
 
       - name: Build for iOS Simulator
         run: |
-          cd "${{ steps.xcode_project.outputs.project_dir }}"
-          xcodebuild -project "${{ steps.xcode_project.outputs.project_path }}" \
-            -scheme "Mini Jump" \
+          xcodebuild -project MiniJump.xcodeproj \
+            -scheme MiniJump \
             -configuration Release \
             -sdk iphonesimulator \
             -destination 'platform=iOS Simulator,name=iPhone 15' \
@@ -180,9 +98,7 @@ jobs:
       - name: Find and package Simulator .app bundle
         id: package_ipa
         run: |
-          cd "${{ steps.xcode_project.outputs.project_dir }}"
-          
-          APP_PATH=$(find ./DerivedData -name "Mini Jump.app" -type d | head -1)
+          APP_PATH=$(find ./DerivedData -name "MiniJump.app" -type d | head -1)
           if [ -z "$APP_PATH" ]; then
             echo "ERROR: No .app bundle found"
             find ./DerivedData -name "*.app" -type d
@@ -193,7 +109,7 @@ jobs:
           mkdir -p Payload
           cp -r "$APP_PATH" Payload/
           
-          if [ ! -d "Payload/Mini Jump.app" ]; then
+          if [ ! -d "Payload/MiniJump.app" ]; then
             echo "ERROR: IPA structure invalid"
             exit 1
           fi

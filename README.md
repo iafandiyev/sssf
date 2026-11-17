@@ -1,6 +1,6 @@
 # Mini Jump
 
-A simple, polished 2D offline mobile game built with Godot 4.7.2.
+A simple, polished 2D offline mobile game built with Swift 6, SwiftUI, and SpriteKit.
 
 ## Gameplay
 
@@ -9,83 +9,76 @@ A simple, polished 2D offline mobile game built with Godot 4.7.2.
 - Avoid obstacles
 - Earn 1 point for every obstacle passed
 - Game over screen with Restart button
-- Best score saved locally
+- Best score saved locally using UserDefaults
 - Gradually increasing difficulty
 
 ## Features
 
-- **Minimalist premium design** with smooth animations
-- **Modern clean UI** with responsive iPhone screen layout
-- **Portrait orientation** optimized for mobile
-- **Procedural sound effects** - no external audio files needed
+- **Premium minimalist design** with smooth animations
+- **Native SwiftUI menus** with SpriteKit gameplay
+- **Portrait orientation** optimized for iPhone
+- **Smooth 60 FPS physics** and animations
 - **Completely offline** - no internet connection required
-- **Local high score persistence** using JSON storage
+- **Local high score persistence** using UserDefaults
 - **No ads, analytics, or online services**
+- **No external game engine** - pure native iOS
 
 ## Requirements
 
-- Godot 4.7.2 (stable)
-- For iOS build: macOS with Xcode 15+
+- iOS 16.0+
+- Xcode 15.0+
+- Swift 6.0
 
 ## Project Structure
 
 ```
-.
+MiniJump/
+├── MiniJump.xcodeproj/           # Xcode project
+│   └── xcshareddata/
+│       └── xcschemes/
+│           └── MiniJump.xcscheme
+├── MiniJump/
+│   ├── MiniJumpApp.swift         # App entry point
+│   ├── ContentView.swift         # SwiftUI views (menus, HUD, game over)
+│   ├── GameScene.swift           # SpriteKit gameplay scene
+│   ├── Info.plist                # App configuration
+│   └── LaunchScreen.storyboard   # Launch screen
 ├── .github/workflows/
-│   └── build-ios.yml          # GitHub Actions CI/CD
-├── export/
-│   └── export_presets.cfg     # iOS export configuration (duplicate)
-├── export_presets.cfg         # iOS export configuration (used by CI)
-├── ios/
-│   ├── Info.plist             # iOS app configuration
-│   ├── Entitlements.plist     # iOS entitlements
-│   └── LaunchScreen.storyboard
-├── scenes/
-│   └── main.tscn              # Main game scene
-├── scripts/
-│   ├── game_manager.gd        # Game state, scoring, persistence
-│   ├── audio_manager.gd       # Procedural sound generation
-│   ├── player.gd              # Player character (jumping ball)
-│   ├── obstacle.gd            # Obstacle objects
-│   ├── obstacle_spawner.gd    # Obstacle spawning with difficulty scaling
-│   ├── background.gd          # Animated parallax background
-│   └── main.gd                # Main game controller
-├── theme/
-│   ├── theme.tres             # Custom UI theme
-│   └── fonts/
-│       └── Inter-Regular.ttf
-├── icon_*.png                 # App icons (20-1024px)
-├── project.godot              # Project configuration
+│   └── build-ios.yml             # GitHub Actions CI/CD
 └── README.md
 ```
 
-## Running the Game
+## Building and Running
 
-### Desktop (Testing)
+### Local Development
 
 ```bash
-# Install Godot 4.7.2 stable
-# Run the project from repository root
-godot --path .
+# Open in Xcode
+open MiniJump.xcodeproj
+
+# Or build from command line
+xcodebuild -project MiniJump.xcodeproj \
+  -scheme MiniJump \
+  -configuration Release \
+  -sdk iphoneos \
+  -destination generic/platform=iOS \
+  build
 ```
 
-Or open the project in Godot Editor and press F5.
-
-## GitHub Actions CI/CD
+### GitHub Actions CI/CD
 
 The repository includes a complete CI/CD pipeline (`.github/workflows/build-ios.yml`):
 
-### Triggers
+#### Triggers
 - Push to `main` or `master`
 - Pull requests to `main` or `master`
 - Manual workflow dispatch
 
-### Jobs
-1. **Validate** (ubuntu-latest): Checks project syntax and loads without errors
-2. **Build iOS Device** (macos-latest): Exports Xcode project, builds unsigned device IPA
-3. **Build iOS Simulator** (macos-latest): Builds unsigned simulator IPA
+#### Jobs
+1. **Build iOS Device** (macos-latest): Builds unsigned device IPA
+2. **Build iOS Simulator** (macos-latest): Builds unsigned simulator IPA
 
-### Artifacts
+#### Artifacts
 - `MiniJump-IPA` - Unsigned iOS device build (requires signing to install on device)
 - `MiniJump-Simulator-IPA` - Unsigned simulator build (runs in iOS Simulator)
 
@@ -96,14 +89,9 @@ The repository includes a complete CI/CD pipeline (`.github/workflows/build-ios.
 ## Building IPA Locally (macOS)
 
 ```bash
-# Export Xcode project
-godot --headless --export-release "iOS" build/ios
-
-# Find and build
-cd build/ios
-PROJECT=$(find . -name "*.xcodeproj" -type d | head -1)
-xcodebuild -project "$PROJECT" \
-  -scheme "Mini Jump" \
+# Build for device
+xcodebuild -project MiniJump.xcodeproj \
+  -scheme MiniJump \
   -configuration Release \
   -sdk iphoneos \
   -destination generic/platform=iOS \
@@ -114,7 +102,7 @@ xcodebuild -project "$PROJECT" \
   build
 
 # Package IPA
-APP=$(find ./DerivedData -name "Mini Jump.app" -type d | head -1)
+APP=$(find ./DerivedData -name "MiniJump.app" -type d | head -1)
 mkdir -p Payload && cp -r "$APP" Payload/
 zip -r MiniJump.ipa Payload
 ```
@@ -146,7 +134,7 @@ The GitHub Actions builds produce **unsigned IPAs**. An unsigned IPA **cannot be
 
 1. Open Xcode → Window → Devices and Simulators
 2. Connect iPhone
-3. Drag the `.app` bundle (from `Payload/Mini Jump.app`) to "Installed Apps"
+3. Drag the `.app` bundle (from `Payload/MiniJump.app`) to "Installed Apps"
 4. Xcode will prompt for signing
 
 ### For Simulator Build
@@ -154,11 +142,11 @@ The GitHub Actions builds produce **unsigned IPAs**. An unsigned IPA **cannot be
 1. Download `MiniJump-Simulator.ipa` artifact
 2. Unzip to get `.app` bundle
 3. Drag `.app` to iOS Simulator window
-4. Or use CLI: `xcrun simctl install booted path/to/Mini\ Jump.app`
+4. Or use CLI: `xcrun simctl install booted path/to/MiniJump.app`
 
 ## Game Controls
 
-- **Tap / Click / Space / Up / W** - Jump
+- **Tap anywhere** - Jump
 - **Start Screen** - Tap "TAP TO START" to begin
 - **Game Over** - Tap "PLAY AGAIN" to restart
 
@@ -169,30 +157,11 @@ The GitHub Actions builds produce **unsigned IPAs**. An unsigned IPA **cannot be
 - **Bundle ID**: com.iafandiyev.minijump
 - **Version**: 1.0.0
 
-### Export Settings
+### Build Settings
 - Target: iPhone (portrait only)
-- Rendering: Forward+
-- Texture Compression: ASTC (iOS)
-- No encryption, no debug export
-
-## Troubleshooting
-
-### Build fails with "No export_presets.cfg found"
-Ensure you're running from the repository root where `export_presets.cfg` exists.
-
-### Xcode build fails
-- Ensure Xcode Command Line Tools installed: `xcode-select --install`
-- Check that the scheme name matches "Mini Jump" (case sensitive)
-- Verify export templates match Godot version (4.7.2)
-
-### IPA won't install
-- Unsigned IPAs require signing via AltStore/Sideloadly
-- Free Apple ID: 7-day signing, 3 apps max
-- Paid Developer Program: 1-year signing, more apps
-
-### Best score not persisting
-- On iOS, `user://` maps to app sandbox Documents folder
-- Ensure app has write permissions (it does by default)
+- Deployment Target: iOS 16.0
+- Swift Version: 6.0
+- No code signing required for CI builds
 
 ## License
 
@@ -200,7 +169,6 @@ MIT License - Feel free to use, modify, and distribute.
 
 ## Credits
 
-- Built with [Godot Engine](https://godotengine.org) 4.7.2
-- Font: [Inter](https://rsms.me/inter/) by Rasmus Andersson
-- Icons: Generated programmatically
-- Sounds: Generated procedurally
+- Built with Swift 6, SwiftUI, and SpriteKit
+- No external game engine
+- No external dependencies

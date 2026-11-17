@@ -7,7 +7,7 @@
 	<key>CFBundleDisplayName</key>
 	<string>Mini Jump</string>
 	<key>CFBundleExecutable</key>
-	<string>${EXECUTABLE_NAME}</string>
+	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.iafandiyev.minijump</string>
 	<key>CFBundleInfoDictionaryVersion</key>
