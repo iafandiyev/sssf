@@ -15,7 +15,6 @@ func _setup_timer() -> void:
 	spawn_timer.one_shot = true
 	spawn_timer.timeout.connect(_on_spawn_timeout.bind())
 	add_child(spawn_timer)
-	_schedule_next_spawn()
 
 func _schedule_next_spawn() -> void:
 	if not game_manager.is_game_active:
@@ -64,18 +63,20 @@ func _spawn_top_bottom_pair(screen_width: float, screen_height: float) -> void:
 	var bottom_y = top_height + gap_size
 	var bottom_height = screen_height - bottom_y
 	
-	# Top obstacle
+	# Top obstacle - NOT scoring
 	var top_obs = obstacle_script.new()
 	top_obs.position = Vector2(screen_width + 50, top_height / 2.0)
 	top_obs.height = top_height
 	top_obs.set_speed(game_manager.get_obstacle_speed())
+	top_obs.set_scoring(false)
 	add_child(top_obs)
 	
-	# Bottom obstacle
+	# Bottom obstacle - scoring
 	var bottom_obs = obstacle_script.new()
 	bottom_obs.position = Vector2(screen_width + 50, bottom_y + bottom_height / 2.0)
 	bottom_obs.height = bottom_height
 	bottom_obs.set_speed(game_manager.get_obstacle_speed())
+	bottom_obs.set_scoring(true)
 	add_child(bottom_obs)
 
 func _spawn_single_middle(screen_width: float, screen_height: float) -> void:
@@ -86,6 +87,7 @@ func _spawn_single_middle(screen_width: float, screen_height: float) -> void:
 	obs.position = Vector2(screen_width + 50, y_pos)
 	obs.height = height
 	obs.set_speed(game_manager.get_obstacle_speed())
+	obs.set_scoring(true)
 	add_child(obs)
 
 func _spawn_double_gap(screen_width: float, screen_height: float) -> void:
@@ -98,25 +100,28 @@ func _spawn_double_gap(screen_width: float, screen_height: float) -> void:
 	var bottom_y = middle_y + middle_height + gap_size
 	var bottom_height = screen_height - bottom_y
 	
-	# Top
+	# Top - NOT scoring
 	var top_obs = obstacle_script.new()
 	top_obs.position = Vector2(screen_width + 50, top_height / 2.0)
 	top_obs.height = top_height
 	top_obs.set_speed(game_manager.get_obstacle_speed())
+	top_obs.set_scoring(false)
 	add_child(top_obs)
 	
-	# Middle
+	# Middle - scoring
 	var mid_obs = obstacle_script.new()
 	mid_obs.position = Vector2(screen_width + 50, middle_y + middle_height / 2.0)
 	mid_obs.height = middle_height
 	mid_obs.set_speed(game_manager.get_obstacle_speed())
+	mid_obs.set_scoring(true)
 	add_child(mid_obs)
 	
-	# Bottom
+	# Bottom - NOT scoring
 	var bot_obs = obstacle_script.new()
 	bot_obs.position = Vector2(screen_width + 50, bottom_y + bottom_height / 2.0)
 	bot_obs.height = bottom_height
 	bot_obs.set_speed(game_manager.get_obstacle_speed())
+	bot_obs.set_scoring(false)
 	add_child(bot_obs)
 
 func clear_all() -> void:

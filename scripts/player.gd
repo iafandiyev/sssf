@@ -14,11 +14,13 @@ var mesh_instance: Polygon2D
 var collision_shape: CollisionShape2D
 var squash_tween: Tween
 var ball_radius: float = 24.0
+var is_dead: bool = false
 
 @onready var game_manager = get_node("/root/GameManager")
 @onready var audio_manager = get_node("/root/AudioManager")
 
 func _ready() -> void:
+	add_to_group("player")
 	_setup_visuals()
 	_setup_physics()
 	_setup_input()
@@ -84,7 +86,7 @@ func _setup_input() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 func _physics_process(delta: float) -> void:
-	if not game_manager.is_game_active:
+	if not game_manager.is_game_active or is_dead:
 		velocity = Vector2.ZERO
 		return
 	
@@ -102,7 +104,7 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 func _input(event: InputEvent) -> void:
-	if not game_manager.is_game_active:
+	if not game_manager.is_game_active or is_dead:
 		return
 		
 	if event is InputEventScreenTouch and event.pressed:
@@ -113,7 +115,7 @@ func _input(event: InputEvent) -> void:
 		_try_jump()
 
 func _try_jump() -> void:
-	if is_grounded:
+	if is_grounded and not is_dead:
 		velocity.y = jump_force
 		is_grounded = false
 		_on_jump()
@@ -144,22 +146,23 @@ func _on_land() -> void:
 	trail_particles.emitting = false
 
 func die() -> void:
-	# Death animation
+	is_dead = true
+	# Death animation - fade and shrink but DON'T queue_free
 	if squash_tween:
 		squash_tween.kill()
 	squash_tween = create_tween()
 	squash_tween.tween_property(mesh_instance, "modulate:a", 0.0, 0.3).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	squash_tween.tween_property(mesh_instance, "scale", Vector2(0.1, 0.1), 0.3).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	squash_tween.tween_callback(_on_death_animation_done.bind())
-
-func _on_death_animation_done() -> void:
-	queue_free()
+	# Disable collision during death
+	collision_shape.disabled = true
 
 func reset_position() -> void:
 	position = Vector2(100.0, ground_y)
 	velocity = Vector2.ZERO
 	is_grounded = true
+	is_dead = false
 	mesh_instance.scale = Vector2(1.0, 1.0)
 	mesh_instance.modulate = Color(1.0, 1.0, 1.0, 1.0)
 	trail_particles.emitting = false
+	collision_shape.disabled = false
 	show()

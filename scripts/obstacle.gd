@@ -5,6 +5,7 @@ class_name Obstacle
 
 @export var width: float = 40.0
 @export var height: float = 120.0
+@export var is_scoring_obstacle: bool = true  # Only one per pair should score
 
 var mesh_instance: Polygon2D
 var collision_shape: CollisionShape2D
@@ -61,6 +62,9 @@ func _setup_physics() -> void:
 func set_speed(speed: float) -> void:
 	obstacle_speed = speed
 
+func set_scoring(enabled: bool) -> void:
+	is_scoring_obstacle = enabled
+
 func _physics_process(delta: float) -> void:
 	if not game_manager.is_game_active:
 		return
@@ -68,7 +72,7 @@ func _physics_process(delta: float) -> void:
 	position.x -= obstacle_speed * delta
 	
 	# Check if player passed this obstacle (for scoring)
-	if not scored and position.x < 50.0:  # Player is at x=100
+	if is_scoring_obstacle and not scored and position.x < 50.0:  # Player is at x=100
 		scored = true
 		game_manager.add_score(1)
 		get_node("/root/AudioManager").play_score()

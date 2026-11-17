@@ -14,6 +14,7 @@ jobs:
   validate:
     name: Validate Project
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -23,15 +24,13 @@ jobs:
         with:
           godot_executable_download_url: https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
           godot_export_templates_download_url: https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz
-          relative_project_path: ./minijump
+          relative_project_path: .
 
       - name: Validate project
-        run: |
-          cd minijump
-          godot --headless --check-only --quit
+        run: godot --headless --check-only --quit
 
   build-ios:
-    name: Build iOS (Device)
+    name: Build iOS Device (Unsigned)
     needs: validate
     runs-on: macos-latest
     timeout-minutes: 60
@@ -44,38 +43,80 @@ jobs:
         with:
           godot_executable_download_url: https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_macos.universal.zip
           godot_export_templates_download_url: https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz
-          relative_project_path: ./minijump
+          relative_project_path: .
 
-      - name: Export iOS project
+      - name: Export iOS Xcode project
         run: |
-          cd minijump
-          godot --headless --export-release "iOS" ../build/ios
+          godot --headless --export-release "iOS" build/ios
+          echo "Export completed"
 
-      - name: Build with Xcode (unsigned for device)
+      - name: Find Xcode project
+        id: xcode_project
         run: |
-          cd build/ios
-          xcodebuild -project "Mini Jump.xcodeproj" \
+          # Godot exports iOS project as <project_name>.xcodeproj
+          PROJECT_PATH=$(find build/ios -name "*.xcodeproj" -type d | head -1)
+          if [ -z "$PROJECT_PATH" ]; then
+            echo "ERROR: No Xcode project found in build/ios"
+            ls -la build/ios/
+            exit 1
+          fi
+          echo "Found Xcode project: $PROJECT_PATH"
+          echo "project_path=$PROJECT_PATH" >> $GITHUB_OUTPUT
+          
+          PROJECT_DIR=$(dirname "$PROJECT_PATH")
+          echo "project_dir=$PROJECT_DIR" >> $GITHUB_OUTPUT
+
+      - name: Build with Xcode (unsigned device build)
+        run: |
+          cd "${{ steps.xcode_project.outputs.project_dir }}"
+          xcodebuild -project "${{ steps.xcode_project.outputs.project_path }}" \
             -scheme "Mini Jump" \
             -configuration Release \
             -sdk iphoneos \
             -destination generic/platform=iOS \
+            -derivedDataPath ./DerivedData \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             build
 
-      - name: Create IPA
+      - name: Find and package .app bundle
+        id: package_ipa
         run: |
-          cd build/ios
+          cd "${{ steps.xcode_project.outputs.project_dir }}"
+          
+          # Find the built .app bundle
+          APP_PATH=$(find ./DerivedData -name "Mini Jump.app" -type d | head -1)
+          if [ -z "$APP_PATH" ]; then
+            echo "ERROR: No .app bundle found"
+            find ./DerivedData -name "*.app" -type d
+            exit 1
+          fi
+          echo "Found .app: $APP_PATH"
+          
+          # Create proper IPA structure
           mkdir -p Payload
-          cp -r build/Release-iphoneos/Mini\ Jump.app Payload/
+          cp -r "$APP_PATH" Payload/
+          
+          # Verify IPA structure
+          if [ ! -d "Payload/Mini Jump.app" ]; then
+            echo "ERROR: IPA structure invalid"
+            exit 1
+          fi
+          
+          # Create IPA
           zip -r MiniJump.ipa Payload
+          
+          # Verify IPA
+          unzip -l MiniJump.ipa | head -20
+          
+          echo "ipa_path=${PWD}/MiniJump.ipa" >> $GITHUB_OUTPUT
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
           name: MiniJump-IPA
-          path: build/ios/MiniJump.ipa
+          path: ${{ steps.package_ipa.outputs.ipa_path }}
           retention-days: 30
 
   build-ios-simulator:
@@ -92,36 +133,72 @@ jobs:
         with:
           godot_executable_download_url: https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_macos.universal.zip
           godot_export_templates_download_url: https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz
-          relative_project_path: ./minijump
+          relative_project_path: .
 
-      - name: Export iOS project
+      - name: Export iOS Xcode project
         run: |
-          cd minijump
-          godot --headless --export-release "iOS" ../build/ios-sim
+          godot --headless --export-release "iOS" build/ios-sim
+          echo "Export completed"
+
+      - name: Find Xcode project
+        id: xcode_project
+        run: |
+          PROJECT_PATH=$(find build/ios-sim -name "*.xcodeproj" -type d | head -1)
+          if [ -z "$PROJECT_PATH" ]; then
+            echo "ERROR: No Xcode project found in build/ios-sim"
+            ls -la build/ios-sim/
+            exit 1
+          fi
+          echo "Found Xcode project: $PROJECT_PATH"
+          echo "project_path=$PROJECT_PATH" >> $GITHUB_OUTPUT
+          
+          PROJECT_DIR=$(dirname "$PROJECT_PATH")
+          echo "project_dir=$PROJECT_DIR" >> $GITHUB_OUTPUT
 
       - name: Build for iOS Simulator
         run: |
-          cd build/ios-sim
-          xcodebuild -project "Mini Jump.xcodeproj" \
+          cd "${{ steps.xcode_project.outputs.project_dir }}"
+          xcodebuild -project "${{ steps.xcode_project.outputs.project_path }}" \
             -scheme "Mini Jump" \
             -configuration Release \
             -sdk iphonesimulator \
             -destination 'platform=iOS Simulator,name=iPhone 15' \
+            -derivedDataPath ./DerivedData \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             build
 
-      - name: Create Simulator IPA
+      - name: Find and package Simulator .app bundle
+        id: package_ipa
         run: |
-          cd build/ios-sim
+          cd "${{ steps.xcode_project.outputs.project_dir }}"
+          
+          APP_PATH=$(find ./DerivedData -name "Mini Jump.app" -type d | head -1)
+          if [ -z "$APP_PATH" ]; then
+            echo "ERROR: No .app bundle found"
+            find ./DerivedData -name "*.app" -type d
+            exit 1
+          fi
+          echo "Found .app: $APP_PATH"
+          
           mkdir -p Payload
-          cp -r build/Release-iphonesimulator/Mini\ Jump.app Payload/
+          cp -r "$APP_PATH" Payload/
+          
+          if [ ! -d "Payload/Mini Jump.app" ]; then
+            echo "ERROR: IPA structure invalid"
+            exit 1
+          fi
+          
           zip -r MiniJump-Simulator.ipa Payload
+          
+          unzip -l MiniJump-Simulator.ipa | head -20
+          
+          echo "ipa_path=${PWD}/MiniJump-Simulator.ipa" >> $GITHUB_OUTPUT
 
       - name: Upload Simulator IPA artifact
         uses: actions/upload-artifact@v4
         with:
           name: MiniJump-Simulator-IPA
-          path: build/ios-sim/MiniJump-Simulator.ipa
+          path: ${{ steps.package_ipa.outputs.ipa_path }}
           retention-days: 30

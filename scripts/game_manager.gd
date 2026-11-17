@@ -24,11 +24,13 @@ func _ready() -> void:
 func load_best_score() -> void:
 	var file = FileAccess.open(STORAGE_FILE, FileAccess.READ)
 	if file:
-		var data = JSON.parse_string(file.get_as_text())
-		if data.get("best_score"):
-			best_score = data["best_score"]
-			best_score_changed.emit(best_score)
+		var content = file.get_as_text().strip_edges()
 		file.close()
+		if content != "":
+			var data = JSON.parse_string(content)
+			if not data.error and data.get("best_score"):
+				best_score = int(data["best_score"])
+				best_score_changed.emit(best_score)
 
 func save_best_score() -> void:
 	var file = FileAccess.open(STORAGE_FILE, FileAccess.WRITE)

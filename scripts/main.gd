@@ -180,6 +180,7 @@ func _on_score_changed(score: int) -> void:
 
 func _on_best_score_changed(best: int) -> void:
 	start_best_label.text = "BEST: %d" % best
+	go_best_score.text = "BEST: %d" % best
 
 func _on_game_over(final_score: int, is_new_best: bool) -> void:
 	obstacle_spawner.clear_all()
@@ -252,6 +253,8 @@ func _show_game_over(final_score: int, is_new_best: bool, best_score: int) -> vo
 func _restart_game() -> void:
 	_hide_game_over()
 	game_manager.reset_game()
+	# Now start a new game
+	game_manager.start_game()
 	player.reset_position()
 	obstacle_spawner.clear_all()
 	obstacle_spawner._schedule_next_spawn()
